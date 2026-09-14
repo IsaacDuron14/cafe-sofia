@@ -69,3 +69,4 @@ El prototipo vivía dentro de una maqueta de teléfono con marco, muesca y barra
 ## Siguiente paso
 
 Según la guía del curso, el siguiente paso es abrir esta carpeta en Visual Studio Code y, desde ahí, usar Claude Code para continuar con la puesta en producción (GitHub, Vercel y el modo real).
+# cafe-sofia
