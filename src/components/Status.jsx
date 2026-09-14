@@ -15,12 +15,12 @@ export default function Status({ lastOrder, go, pushPulso, onConfirmPickup }) {
     const t1 = setTimeout(() => setStep(1), 1800);
     const t2 = setTimeout(() => {
       setStep(2);
-      pushPulso(
-        'Preparación finalizada',
-        'Notificar al cliente que su pedido está listo',
-        'Actualizó el estado del pedido',
-        'Listo para retirar — DEMO'
-      );
+      pushPulso({
+        detecto: 'Preparación finalizada',
+        decidio: 'Notificar al cliente que su pedido está listo',
+        actuo: 'Actualizó el estado del pedido',
+        registro: 'Listo para retirar — DEMO',
+      });
     }, 3800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps

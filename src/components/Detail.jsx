@@ -15,24 +15,25 @@ export default function Detail({ productId, go, onAdd, pushPulso }) {
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
+    if (!p) return undefined;
     setChecking(true);
     setQty(1);
     const t = setTimeout(() => {
       setChecking(false);
       if (p.available) {
-        pushPulso(
-          `Consulta de disponibilidad para ${p.name}`,
-          'Confirmar stock antes de mostrar el botón de compra',
-          'Revisó el inventario simulado',
-          `Disponible — ${p.name} listo para agregar al carrito`
-        );
+        pushPulso({
+          detecto: `Consulta de disponibilidad para ${p.name}`,
+          decidio: 'Confirmar stock antes de mostrar el botón de compra',
+          actuo: 'Revisó el inventario simulado',
+          registro: `Disponible — ${p.name} listo para agregar al carrito`,
+        });
       } else {
-        pushPulso(
-          `Consulta de disponibilidad para ${p.name}`,
-          'No ofrecer un producto sin stock; buscar alternativa disponible',
-          `Revisó el inventario y sugirió ${alt ? alt.name : 'otra opción'}`,
-          'Agotado — alternativa mostrada al cliente'
-        );
+        pushPulso({
+          detecto: `Consulta de disponibilidad para ${p.name}`,
+          decidio: 'No ofrecer un producto sin stock; buscar alternativa disponible',
+          actuo: `Revisó el inventario y sugirió ${alt ? alt.name : 'otra opción'}`,
+          registro: 'Agotado — alternativa mostrada al cliente',
+        });
       }
     }, 900);
     return () => clearTimeout(t);

@@ -6,12 +6,12 @@ export default function Survey({ go, pushPulso }) {
   const [sent, setSent] = useState(false);
 
   function submit() {
-    pushPulso(
-      'Encuesta final recibida',
-      'Registrar la opinión del cliente sobre su visita',
-      `Calificación ${stars || 'sin calificar'} de 5`,
-      'Encuesta registrada — DEMO'
-    );
+    pushPulso({
+      detecto: 'Encuesta final recibida',
+      decidio: 'Registrar la opinión del cliente sobre su visita',
+      actuo: `Calificación ${stars || 'sin calificar'} de 5`,
+      registro: 'Encuesta registrada — DEMO',
+    });
     setSent(true);
   }
 

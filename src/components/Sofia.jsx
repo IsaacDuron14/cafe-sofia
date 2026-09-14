@@ -21,8 +21,7 @@ export default function Sofia({
   chatStarted, lastUserText, onSendText,
   prefs, onPickPref,
   onAddToCart, go, pushPulso,
-  callState, callPhase, callStartedAt, callEndedAt, lastCallRecommendation,
-  onStartCall, onAnswerCall, onEndCall, onProceedCallAfterPrefs, onReturnToReposo,
+  call, callActions,
 }) {
   return (
     <div className="view active" data-group="sofia">
@@ -34,20 +33,12 @@ export default function Sofia({
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {sofiaMode === 'voz' ? (
           <CallStage
-            callState={callState}
-            callPhase={callPhase}
-            callStartedAt={callStartedAt}
-            callEndedAt={callEndedAt}
-            lastCallRecommendation={lastCallRecommendation}
+            call={call}
+            callActions={callActions}
             prefs={prefs}
             onPickPref={onPickPref}
             onAddToCart={onAddToCart}
             go={go}
-            onStartCall={onStartCall}
-            onAnswerCall={onAnswerCall}
-            onEndCall={onEndCall}
-            onProceedCallAfterPrefs={onProceedCallAfterPrefs}
-            onReturnToReposo={onReturnToReposo}
           />
         ) : (
           <TextChat
@@ -82,12 +73,12 @@ function TextChat({ chatStarted, lastUserText, onSendText, prefs, onPickPref, on
     if (stage === 'done' && !pushedRef.current) {
       pushedRef.current = true;
       const rec = getRecommendation(prefs);
-      pushPulso(
-        `Consulta del cliente: "${lastUserText}"`,
-        'Recomendar una bebida disponible según sus preferencias y el momento del día',
-        `Sugirió ${rec.product.name}`,
-        'Recomendación entregada — DEMO'
-      );
+      pushPulso({
+        detecto: `Consulta del cliente: "${lastUserText}"`,
+        decidio: 'Recomendar una bebida disponible según sus preferencias y el momento del día',
+        actuo: `Sugirió ${rec.product.name}`,
+        registro: 'Recomendación entregada — DEMO',
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
@@ -148,12 +139,10 @@ function TextChat({ chatStarted, lastUserText, onSendText, prefs, onPickPref, on
   );
 }
 
-function CallStage({
-  callState, callPhase, callStartedAt, callEndedAt, lastCallRecommendation,
-  prefs, onPickPref, onAddToCart, go,
-  onStartCall, onAnswerCall, onEndCall, onProceedCallAfterPrefs, onReturnToReposo,
-}) {
-  if (callState === 'reposo') {
+function CallStage({ call, callActions, prefs, onPickPref, onAddToCart, go }) {
+  const { onStartCall, onAnswerCall, onEndCall } = callActions;
+
+  if (call.state === 'reposo') {
     return (
       <div className="call-stage">
         <PhoneIcon className="phone-illustration" />
@@ -165,7 +154,7 @@ function CallStage({
     );
   }
 
-  if (callState === 'connecting') {
+  if (call.state === 'connecting') {
     return (
       <div className="call-stage">
         <div className="spinner" style={{ width: 30, height: 30, borderWidth: 3 }} />
@@ -175,7 +164,7 @@ function CallStage({
     );
   }
 
-  if (callState === 'ringing') {
+  if (call.state === 'ringing') {
     return (
       <div className="call-stage">
         <PhoneIcon className="phone-illustration ring-icon" stroke="var(--coral)" />
@@ -194,36 +183,28 @@ function CallStage({
     );
   }
 
-  if (callState === 'active') {
+  if (call.state === 'active') {
     return (
       <CallActive
-        callPhase={callPhase}
+        call={call}
+        callActions={callActions}
         prefs={prefs}
         onPickPref={onPickPref}
         onAddToCart={onAddToCart}
-        onEndCall={onEndCall}
-        onProceedCallAfterPrefs={onProceedCallAfterPrefs}
-        lastCallRecommendation={lastCallRecommendation}
       />
     );
   }
 
-  if (callState === 'ended') {
-    return (
-      <CallEnded
-        callStartedAt={callStartedAt}
-        callEndedAt={callEndedAt}
-        lastCallRecommendation={lastCallRecommendation}
-        onReturnToReposo={onReturnToReposo}
-        go={go}
-      />
-    );
+  if (call.state === 'ended') {
+    return <CallEnded call={call} callActions={callActions} go={go} />;
   }
 
   return null;
 }
 
-function CallActive({ callPhase, prefs, onPickPref, onAddToCart, onEndCall, onProceedCallAfterPrefs, lastCallRecommendation }) {
+function CallActive({ call, callActions, prefs, onPickPref, onAddToCart }) {
+  const { phase: callPhase, lastRecommendation: lastCallRecommendation } = call;
+  const { onEndCall, onProceedCallAfterPrefs } = callActions;
   const stateLabel = { asking: 'Conversando', escuchando: 'Escuchando', consultando: 'Consultando', respondiendo: 'Respondiendo' }[callPhase] || 'En llamada';
   const ringColor = { escuchando: 'var(--coral)', consultando: 'var(--amber)' }[callPhase] || 'var(--emerald)';
 
@@ -278,7 +259,8 @@ function formatDuration(callStartedAt, callEndedAt) {
   return `${m}:${s}`;
 }
 
-function CallEnded({ callStartedAt, callEndedAt, lastCallRecommendation, onReturnToReposo, go }) {
+function CallEnded({ call, callActions, go }) {
+  const { startedAt: callStartedAt, endedAt: callEndedAt, lastRecommendation: lastCallRecommendation } = call;
   return (
     <div className="call-stage">
       <div className="call-summary-card">
@@ -288,7 +270,7 @@ function CallEnded({ callStartedAt, callEndedAt, lastCallRecommendation, onRetur
           {lastCallRecommendation ? <>SofIA le recomendó <b>{lastCallRecommendation.product.name}</b>.</> : 'La llamada terminó antes de recibir una recomendación.'}
         </p>
       </div>
-      <button className="btn btn-primary" onClick={onReturnToReposo}>Volver a llamar</button>
+      <button className="btn btn-primary" onClick={callActions.onReturnToReposo}>Volver a llamar</button>
       <button className="btn btn-ghost" onClick={() => go('pulso')}>Ver en El Pulso</button>
     </div>
   );

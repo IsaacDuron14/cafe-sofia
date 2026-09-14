@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { PAY_METHODS, SERVICE_TAX_RATE, money } from '../data.js';
 import { cartTotal } from '../recommend.js';
+import { ClockIcon } from './Icons.jsx';
 
 /**
  * Confirmar y pagar. Reserva temporal de 5 minutos (299s) con verificación
@@ -19,12 +20,12 @@ export default function Confirm({ cart, go, onPay, pushPulso }) {
     if (!ids.length) { go('cart'); return; }
     if (!pushedRef.current) {
       pushedRef.current = true;
-      pushPulso(
-        'Pedido confirmado por el cliente',
-        'Reservar temporalmente el stock antes del pago',
-        'Bloqueó las unidades del carrito por 5 minutos',
-        'Reserva activa — DEMO'
-      );
+      pushPulso({
+        detecto: 'Pedido confirmado por el cliente',
+        decidio: 'Reservar temporalmente el stock antes del pago',
+        actuo: 'Bloqueó las unidades del carrito por 5 minutos',
+        registro: 'Reserva activa — DEMO',
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -53,12 +54,12 @@ export default function Confirm({ cart, go, onPay, pushPulso }) {
       setReserveExpired(false);
       setReserveSecs(299);
       setRechecking(false);
-      pushPulso(
-        'Nueva verificación de stock solicitada',
-        'Confirmar que las unidades reservadas siguen disponibles',
-        'Repitió la validación de inventario',
-        'Stock confirmado — reserva reiniciada'
-      );
+      pushPulso({
+        detecto: 'Nueva verificación de stock solicitada',
+        decidio: 'Confirmar que las unidades reservadas siguen disponibles',
+        actuo: 'Repitió la validación de inventario',
+        registro: 'Stock confirmado — reserva reiniciada',
+      });
     }, 900);
   }
 
@@ -69,9 +70,7 @@ export default function Confirm({ cart, go, onPay, pushPulso }) {
     <div className="view active" data-group="menu">
       <h1 className="page-title">Confirmar y pagar</h1>
       <div className="reserve-chip">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
-        </svg>
+        <ClockIcon width="15" height="15" />
         Reserva temporal · expira en <b>{m}:{s}</b>
         <span style={{ marginLeft: 'auto', fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, border: '1px solid rgba(239,170,52,.5)', padding: '2px 6px', borderRadius: 999 }}>DEMO</span>
       </div>

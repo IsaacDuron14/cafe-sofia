@@ -54,3 +54,7 @@ export function cartTax(cart, rate) {
 export function cartTotal(cart, rate) {
   return cartSubtotal(cart) + cartTax(cart, rate);
 }
+
+export function cartItemCount(cart) {
+  return Object.values(cart).reduce((a, b) => a + b, 0);
+}

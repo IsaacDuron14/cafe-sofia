@@ -1,6 +1,6 @@
 import { PRODUCTS, SERVICE_TAX_RATE, money } from '../data.js';
 import { PRODUCT_ICONS, XIcon } from './Icons.jsx';
-import { cartSubtotal } from '../recommend.js';
+import { cartSubtotal, cartTax } from '../recommend.js';
 
 export default function Cart({ cart, go, onChangeQty, onRemove }) {
   const ids = Object.keys(cart).filter((id) => cart[id] > 0);
@@ -22,7 +22,7 @@ export default function Cart({ cart, go, onChangeQty, onRemove }) {
   }
 
   const subtotal = cartSubtotal(cart);
-  const tax = Math.round(subtotal * SERVICE_TAX_RATE);
+  const tax = cartTax(cart, SERVICE_TAX_RATE);
 
   return (
     <div className="view active" data-group="menu">

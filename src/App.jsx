@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { PRODUCTS, PAY_METHODS, SERVICE_TAX_RATE } from './data.js';
-import { cartTotal, getRecommendation } from './recommend.js';
-import { loadStored, saveStored, resetStored } from './storage.js';
+import { cartTotal, cartItemCount } from './recommend.js';
+import { resetStored } from './storage.js';
+import { usePersistedState, usePersistToStorage } from './hooks/usePersistedState.js';
+import { usePulsoLog } from './hooks/usePulsoLog.js';
+import { useSofiaCall } from './hooks/useSofiaCall.js';
 
 import { CartIcon } from './components/Icons.jsx';
 import Navbar from './components/Navbar.jsx';
@@ -34,47 +37,28 @@ const VIEW_GROUPS = {
 };
 
 export default function App() {
-  const stored = useMemo(loadStored, []);
+  const {
+    initialOnboardingDone, initialPulsoLog,
+    cart, setCart,
+    prefs, setPrefs,
+    challengeProgress, setChallengeProgress,
+    orderHistory, setOrderHistory,
+    onboardingDone, setOnboardingDone,
+    micPermission, setMicPermission,
+  } = usePersistedState();
+  const { pulsoLog, pushPulso } = usePulsoLog(initialPulsoLog);
+  usePersistToStorage({ cart, prefs, challengeProgress, pulsoLog, orderHistory, onboardingDone, micPermission });
 
-  const [cart, setCart] = useState(stored.cart || {});
-  const [prefs, setPrefs] = useState({ temp: null, milk: null, intensity: null, sweet: null, name: '', ...(stored.prefs || {}) });
-  const [challengeProgress, setChallengeProgress] = useState(
-    Array.isArray(stored.challengeProgress) && stored.challengeProgress.length === 5 ? stored.challengeProgress : [false, false, false, false, false]
-  );
-  const [pulsoLog, setPulsoLog] = useState(Array.isArray(stored.pulsoLog) ? stored.pulsoLog : []);
-  const [orderHistory, setOrderHistory] = useState(Array.isArray(stored.orderHistory) ? stored.orderHistory : []);
-  const [onboardingDone, setOnboardingDone] = useState(!!stored.onboardingDone);
-  const [micPermission, setMicPermissionState] = useState(typeof stored.micPermission === 'boolean' ? stored.micPermission : null);
-
-  const [view, setView] = useState(stored.onboardingDone ? 'home' : 'qr');
+  const [view, setView] = useState(initialOnboardingDone ? 'home' : 'qr');
   const [activeFilter, setActiveFilter] = useState('todas');
   const [currentProductId, setCurrentProductId] = useState(null);
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [lastOrder, setLastOrder] = useState(null);
 
-  const [sofiaMode, setSofiaModeState] = useState('voz');
-  const [chatStarted, setChatStarted] = useState(false);
-  const [lastUserText, setLastUserText] = useState('¿Qué me recomienda para esta tarde?');
-
-  const [callState, setCallState] = useState('reposo');
-  const [callPhase, setCallPhase] = useState('asking');
-  const [callStartedAt, setCallStartedAt] = useState(null);
-  const [callEndedAt, setCallEndedAt] = useState(null);
-  const [lastCallRecommendation, setLastCallRecommendation] = useState(null);
-  const callTimerRef = useRef(null);
-  useEffect(() => () => clearTimeout(callTimerRef.current), []);
-
-  // Persistencia simulada: se guarda en localStorage cada vez que cambian estos datos.
-  useEffect(() => {
-    saveStored({ cart, prefs, challengeProgress, pulsoLog, orderHistory, onboardingDone, micPermission });
-  }, [cart, prefs, challengeProgress, pulsoLog, orderHistory, onboardingDone, micPermission]);
-
-  function pushPulso(detecto, decidio, actuo, registro) {
-    const t = new Date();
-    const hh = String(t.getHours()).padStart(2, '0');
-    const mm = String(t.getMinutes()).padStart(2, '0');
-    setPulsoLog((prev) => [{ time: `${hh}:${mm}`, detecto, decidio, actuo, registro }, ...prev]);
-  }
+  const {
+    sofiaMode, setMode, chatStarted, lastUserText, sendText,
+    lastCallRecommendation, call, callActions,
+  } = useSofiaCall(prefs, pushPulso);
 
   function go(v) {
     setView(v);
@@ -89,12 +73,12 @@ export default function App() {
     const p = PRODUCTS.find((x) => x.id === id);
     if (!p || !p.available) return;
     setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + qty }));
-    pushPulso(
-      `Producto agregado: ${p.name}`,
-      'Sumarlo a su carrito con la cantidad indicada',
-      `Agregó ${qty} unidad(es) de ${p.name}`,
-      'Carrito actualizado — DEMO'
-    );
+    pushPulso({
+      detecto: `Producto agregado: ${p.name}`,
+      decidio: 'Sumarlo a su carrito con la cantidad indicada',
+      actuo: `Agregó ${qty} unidad(es) de ${p.name}`,
+      registro: 'Carrito actualizado — DEMO',
+    });
     setView('menu');
   }
 
@@ -119,18 +103,18 @@ export default function App() {
     setView('paying');
     setTimeout(() => {
       if (simulateFail) {
-        pushPulso(
-          'Intento de pago simulado',
-          'Detener el proceso si el pago no se aprueba',
-          'Rechazó la transacción de prueba',
-          'Pago fallido — el carrito se conserva intacto'
-        );
+        pushPulso({
+          detecto: 'Intento de pago simulado',
+          decidio: 'Detener el proceso si el pago no se aprueba',
+          actuo: 'Rechazó la transacción de prueba',
+          registro: 'Pago fallido — el carrito se conserva intacto',
+        });
         window.alert('El pago no pudo procesarse (simulado). Su carrito sigue intacto — puede intentar de nuevo.');
         setView('confirm');
         return;
       }
       const orderNo = 'SOFIA-' + Math.floor(1000 + Math.random() * 9000);
-      const count = Object.values(cart).reduce((a, b) => a + b, 0);
+      const count = cartItemCount(cart);
       const methodLabel = (PAY_METHODS.find((m) => m.id === selectedPayId) || {}).label || '—';
       const total = cartTotal(cart, SERVICE_TAX_RATE);
       const order = { orderNo, items: { ...cart }, total, method: selectedPayId };
@@ -139,19 +123,24 @@ export default function App() {
         ...h,
         { orderNo, total, count, methodLabel, when: new Date().toLocaleString('es-CR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) },
       ]);
-      pushPulso('Pago aprobado (simulado)', 'Registrar la venta y liberar la reserva', `Generó el comprobante ${orderNo}`, 'Pedido registrado — DEMO');
+      pushPulso({
+        detecto: 'Pago aprobado (simulado)',
+        decidio: 'Registrar la venta y liberar la reserva',
+        actuo: `Generó el comprobante ${orderNo}`,
+        registro: 'Pedido registrado — DEMO',
+      });
       setCart({});
       setView('receipt');
     }, 1200);
   }
 
   function confirmPickup() {
-    pushPulso(
-      'Cliente confirmó el retiro del pedido',
-      'Cerrar el ciclo del pedido y marcarlo como entregado',
-      `Marcó ${lastOrder ? lastOrder.orderNo : 'el pedido'} como retirado`,
-      'Pedido retirado — DEMO'
-    );
+    pushPulso({
+      detecto: 'Cliente confirmó el retiro del pedido',
+      decidio: 'Cerrar el ciclo del pedido y marcarlo como entregado',
+      actuo: `Marcó ${lastOrder ? lastOrder.orderNo : 'el pedido'} como retirado`,
+      registro: 'Pedido retirado — DEMO',
+    });
     setView('pickup-confirm');
   }
 
@@ -159,10 +148,10 @@ export default function App() {
     setPrefs((prev) => ({ ...prev, [key]: prev[key] === val ? null : val }));
   }
 
-  function setMicPermission(v) {
-    setMicPermissionState(v);
+  function handleMicPermission(v) {
+    setMicPermission(v);
     setOnboardingDone(true);
-    if (!v) setSofiaModeState('texto');
+    if (!v) setMode('texto');
     setView('home');
   }
 
@@ -186,80 +175,15 @@ export default function App() {
       next[currentChallenge] = true;
       return next;
     });
-    pushPulso(
-      `Respuesta del desafío "${c.eyebrow}" recibida`,
-      'Validar la respuesta y explicar el porqué',
-      'Marcó el desafío como completado',
-      'Correcto — aprendizaje mostrado'
-    );
+    pushPulso({
+      detecto: `Respuesta del desafío "${c.eyebrow}" recibida`,
+      decidio: 'Validar la respuesta y explicar el porqué',
+      actuo: 'Marcó el desafío como completado',
+      registro: 'Correcto — aprendizaje mostrado',
+    });
   }
 
-  function setMode(m) {
-    setSofiaModeState(m);
-    if (m === 'voz') setCallState('reposo');
-  }
-
-  function sendText(text) {
-    setLastUserText(text);
-    setChatStarted(true);
-  }
-
-  function startCall() {
-    clearTimeout(callTimerRef.current);
-    setCallState('connecting');
-    callTimerRef.current = setTimeout(() => setCallState('ringing'), 1400);
-  }
-
-  function answerCall() {
-    setCallState('active');
-    setCallPhase('asking');
-    setCallStartedAt(Date.now());
-  }
-
-  function endCall(reason) {
-    clearTimeout(callTimerRef.current);
-    if (reason === 'cancelado' || reason === 'rechazada') {
-      pushPulso(
-        'Llamada a SofIA iniciada',
-        'Conectar al cliente con la anfitriona de voz',
-        reason === 'cancelado' ? 'El cliente canceló antes de conectar' : 'El cliente no contestó la llamada',
-        'Llamada finalizada sin conversación — DEMO'
-      );
-      setCallState('reposo');
-      return;
-    }
-    const endedAt = Date.now();
-    setCallEndedAt(endedAt);
-    setCallState('ended');
-    const secs = Math.max(1, Math.round((endedAt - (callStartedAt || endedAt)) / 1000));
-    const m = Math.floor(secs / 60);
-    const s = String(secs % 60).padStart(2, '0');
-    pushPulso('Llamada con SofIA finalizada', 'Cerrar la sesión de voz y resumir lo conversado', `Duración ${m}:${s}`, 'Llamada finalizada — DEMO');
-  }
-
-  function proceedCallAfterPrefs() {
-    setCallPhase('escuchando');
-    callTimerRef.current = setTimeout(() => {
-      setCallPhase('consultando');
-      callTimerRef.current = setTimeout(() => {
-        setCallPhase('respondiendo');
-        const rec = getRecommendation(prefs);
-        setLastCallRecommendation(rec);
-        pushPulso(
-          'Consulta por voz recibida',
-          'Recomendar una bebida disponible según sus preferencias y el momento del día',
-          `Sugirió ${rec.product.name} durante la llamada`,
-          'Recomendación entregada por voz — DEMO'
-        );
-      }, 1300);
-    }, 1300);
-  }
-
-  function returnToReposo() {
-    setCallState('reposo');
-  }
-
-  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const cartCount = cartItemCount(cart);
   const isOnboarding = ONBOARD_VIEWS.includes(view);
   const activeGroup = VIEW_GROUPS[view];
 
@@ -278,7 +202,7 @@ export default function App() {
       {view === 'guest' && <GuestView go={go} />}
       {view === 'privacy' && <PrivacyView go={go} />}
       {view === 'ai-info' && <AiInfoView go={go} />}
-      {view === 'mic-permission' && <MicPermissionView onSetMicPermission={setMicPermission} />}
+      {view === 'mic-permission' && <MicPermissionView onSetMicPermission={handleMicPermission} />}
 
       {view === 'home' && <Home go={go} onOpenDetail={openDetail} onAdd={addToCart} lastCallRecommendation={lastCallRecommendation} />}
       {view === 'menu' && (
@@ -305,16 +229,8 @@ export default function App() {
           onAddToCart={addToCart}
           go={go}
           pushPulso={pushPulso}
-          callState={callState}
-          callPhase={callPhase}
-          callStartedAt={callStartedAt}
-          callEndedAt={callEndedAt}
-          lastCallRecommendation={lastCallRecommendation}
-          onStartCall={startCall}
-          onAnswerCall={answerCall}
-          onEndCall={endCall}
-          onProceedCallAfterPrefs={proceedCallAfterPrefs}
-          onReturnToReposo={returnToReposo}
+          call={call}
+          callActions={callActions}
         />
       )}
       {view === 'challenge' && (
