@@ -36,6 +36,18 @@ const VIEW_GROUPS = {
   perfil: 'perfil', historial: 'perfil', 'challenges-progress': 'perfil',
 };
 
+// Avisa al backend real (Apps Script, vía la función serverless de Vercel)
+// que se confirmó una compra, para que descuente stock y anote la venta.
+// No bloquea ni afecta la demo: si el backend no responde, el pedido ya
+// quedó confirmado igual en pantalla.
+function notifyBackendOfOrder(order) {
+  fetch('/api/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(order),
+  }).catch(() => {});
+}
+
 export default function App() {
   const {
     initialOnboardingDone, initialPulsoLog,
@@ -118,6 +130,7 @@ export default function App() {
       const methodLabel = (PAY_METHODS.find((m) => m.id === selectedPayId) || {}).label || '—';
       const total = cartTotal(cart, SERVICE_TAX_RATE);
       const order = { orderNo, items: { ...cart }, total, method: selectedPayId };
+      notifyBackendOfOrder(order);
       setLastOrder(order);
       setOrderHistory((h) => [
         ...h,
