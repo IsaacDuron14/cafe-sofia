@@ -1,0 +1,6 @@
+node_modules/
+dist/
+
+# Copia de referencia del backend de Apps Script: solo para que Claude la lea,
+# nunca se despliega desde acá y nunca debe llegar a GitHub.
+apps-script/
