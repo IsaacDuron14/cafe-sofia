@@ -1,8 +1,8 @@
 # Mi progreso — Café SofIA
 
 ## Clase 5 · De un prompt a una app publicada en Internet (tramo final)
-- [ ] Etapa 0 · Punto de partida: llegaste a Claude Code
-- [ ] Etapa 1 · GitHub
+- [x] Etapa 0 · Punto de partida: llegaste a Claude Code
+- [x] Etapa 1 · GitHub — repo ya existía: github.com/IsaacDuron14/cafe-sofia
 - [ ] Etapa 2 · Vercel — URL pública
 
 ## Clase 6 · Conectar con el mundo real
@@ -19,3 +19,4 @@
 _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - El proyecto ya tenía el prototipo convertido en código (React + Vite), abierto en VS Code con Claude Code conectado.
 - Antes de empezar esta guía se hizo una revisión y limpieza de código del e-commerce (organización de estado en hooks, corrección de bugs menores). No afecta a las etapas de esta guía.
+- Usuario de GitHub: IsaacDuron14. Repo: cafe-sofia.
