@@ -11,8 +11,8 @@
 - [x] Etapa 5 · Variables de entorno
 - [x] Etapa 6 · El token entre servidores — HITO 2 logrado 🎉
 - [ ] Etapa 7 · Los métodos de pago — PENDIENTE: falta que el alumno dé el dato real de cuenta/alias para la transferencia (Mercado Pago no opera en Honduras, descartado)
-- [ ] Etapa 8 · El panel de administración: la trastienda
-- [ ] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias
+- [x] Etapa 8 · El panel de administración: la trastienda — probado en producción: login, ver cafés/insumos y agregar stock funcionan
+- [x] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias — entendido el modelo de datos y el CRUD; falta probar "confirmar transferencia" cuando se complete la Etapa 7b (todavía no hay pedidos pendientes que confirmar)
 - [ ] Etapa 10 · SofIA en modo real
 
 ## Notas de contexto
@@ -27,5 +27,7 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - Variable APPS_SCRIPT_URL cargada en Vercel y confirmada con Redeploy (deploy en verde/Ready).
 - Backend actualizado: se agregó doPost + registrarPedidoEcommerce_ (recibe pedidos del e-commerce) y se corrió migrarCartaEcommerce_ una vez para que la hoja carta tenga los 4 cafés reales (p1-p4) en vez del catálogo de ejemplo de la Clase 3. Publicado como Versión 5 en Apps Script.
 - Al alumno le costó bastante el copy/paste entre VS Code y el editor de Apps Script (se rompió la sintaxis varias veces). Si hay que volver a pegar código grande ahí, ir con mucho cuidado y verificar en pasos chicos.
-- Token servidor-a-servidor: variable en Vercel APPS_SCRIPT_TOKEN = Script Property en Apps Script API_TOKEN (mismo valor, nombres distintos). Backend en Versión 6 con la verificación de token activa.
-- Etapa 8 (panel admin) en curso: variables cargadas en Vercel ADMIN_PASSWORD y ADMIN_APPS_SCRIPT_TOKEN. Falta cargar ADMIN_TOKEN en Script Properties de Apps Script (mismo valor que ADMIN_APPS_SCRIPT_TOKEN) y hacer Redeploy en Vercel.
+- Token servidor-a-servidor: variable en Vercel APPS_SCRIPT_TOKEN = Script Property en Apps Script API_TOKEN (mismo valor, nombres distintos). Backend con la verificación de token activa.
+- Etapa 8 (panel admin) completa y probada en producción (tu-sitio.vercel.app/admin, clave sofia2026admin). Segundo token: Vercel ADMIN_APPS_SCRIPT_TOKEN = Apps Script Script Property ADMIN_TOKEN. Backend con Admin.gs (archivo nuevo) y doPost enrutando acciones admin_*.
+- PENDIENTE antes de la Etapa 10: completar la Etapa 7 (el alumno tiene que dar el dato real de cuenta/alias para la transferencia; Mercado Pago descartado, no opera en Honduras — se evaluó PayPal como alternativa pero el alumno prefirió dejarlo para más adelante).
+- PENDIENTE para la Etapa 10: traer también el Index.html del proyecto de Apps Script (el "tablero de SofIA" de la Clase 3, donde va el switch de modo real) — todavía no está en apps-script/, distinto del panel /admin nuevo.
