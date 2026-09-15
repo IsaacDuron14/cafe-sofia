@@ -9,8 +9,8 @@
 - [x] Etapa 3 · La arquitectura, como un restaurante
 - [x] Etapa 4 · Conectar el frontend con el backend — probado con compra real: registra venta, stock y caja
 - [x] Etapa 5 · Variables de entorno
-- [ ] Etapa 6 · El token entre servidores — HITO 2
-- [ ] Etapa 7 · Los métodos de pago
+- [x] Etapa 6 · El token entre servidores — HITO 2 logrado 🎉
+- [ ] Etapa 7 · Los métodos de pago — PENDIENTE: falta que el alumno dé el dato real de cuenta/alias para la transferencia (Mercado Pago no opera en Honduras, descartado)
 - [ ] Etapa 8 · El panel de administración: la trastienda
 - [ ] Etapa 9 · Usar el panel: carta, insumos, stock y transferencias
 - [ ] Etapa 10 · SofIA en modo real
@@ -27,3 +27,5 @@ _(Lo importante para retomar. Sin claves ni contraseñas.)_
 - Variable APPS_SCRIPT_URL cargada en Vercel y confirmada con Redeploy (deploy en verde/Ready).
 - Backend actualizado: se agregó doPost + registrarPedidoEcommerce_ (recibe pedidos del e-commerce) y se corrió migrarCartaEcommerce_ una vez para que la hoja carta tenga los 4 cafés reales (p1-p4) en vez del catálogo de ejemplo de la Clase 3. Publicado como Versión 5 en Apps Script.
 - Al alumno le costó bastante el copy/paste entre VS Code y el editor de Apps Script (se rompió la sintaxis varias veces). Si hay que volver a pegar código grande ahí, ir con mucho cuidado y verificar en pasos chicos.
+- Token servidor-a-servidor: variable en Vercel APPS_SCRIPT_TOKEN = Script Property en Apps Script API_TOKEN (mismo valor, nombres distintos). Backend en Versión 6 con la verificación de token activa.
+- Etapa 8 (panel admin) en curso: variables cargadas en Vercel ADMIN_PASSWORD y ADMIN_APPS_SCRIPT_TOKEN. Falta cargar ADMIN_TOKEN en Script Properties de Apps Script (mismo valor que ADMIN_APPS_SCRIPT_TOKEN) y hacer Redeploy en Vercel.
